@@ -1,8 +1,10 @@
 from flask import Flask, render_template, redirect
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
-from flask import make_response
-from flask import jsonify
+from flask import make_response, request
+from flask import jsonify, abort
 from forms.user import RegisterForm
+from forms.genresform import GenresForm
+from forms.artistsform import ArtistsForm
 from data.loginform import LoginForm
 from data import db_session
 from data.customers import Customer
@@ -114,7 +116,113 @@ def tracks_list():
 
 
 # ###-----ДЛЯ ЖАНРА-----###
+@app.route('/genres',  methods=['GET', 'POST'])
+@login_required
+def add_genre():
+    form = GenresForm()
+    if form.validate_on_submit():
+        db_sess = db_session.create_session()
+        genre = Genre()
+        genre.name = form.name.data
+        db_sess.add(genre)
+        db_sess.commit()
+        return redirect('/genres_list')
+    return render_template('genres_form.html', title='Genre adding',
+                           form=form)
 
+
+@app.route('/genres/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edit_genre(id):
+    form = GenresForm()
+    if request.method == "GET":
+        db_sess = db_session.create_session()
+        genre = db_sess.query(Genre).filter(Genre.id == id).first()
+        if genre:
+            form.name.data = genre.name
+        else:
+            abort(404)
+    if form.validate_on_submit():
+        db_sess = db_session.create_session()
+        genre = db_sess.query(Genre).filter(Genre.id == id).first()
+        if genre:
+            genre.name = form.name.data
+            db_sess.commit()
+            return redirect('/genres_list')
+        else:
+            abort(404)
+    return render_template('genres_form.html',
+                           title='Genre fix',
+                           form=form
+                           )
+
+
+@app.route('/genres_delete/<int:id>', methods=['GET', 'POST'])
+@login_required
+def genre_delete(id):
+    db_sess = db_session.create_session()
+    genre = db_sess.query(Genre).filter(Genre.id == id).first()
+    if genre:
+        db_sess.delete(genre)
+        db_sess.commit()
+    else:
+        abort(404)
+    return redirect('/genres_list')
+
+
+# ###-----ДЛЯ АРТИСТОВ----###
+@app.route('/artists',  methods=['GET', 'POST'])
+@login_required
+def add_artist():
+    form = ArtistsForm()
+    if form.validate_on_submit():
+        db_sess = db_session.create_session()
+        artist = Artist()
+        artist.name = form.name.data
+        db_sess.add(artist)
+        db_sess.commit()
+        return redirect('/artists_list')
+    return render_template('artists_form.html', title='Artist adding',
+                           form=form)
+
+
+@app.route('/artists/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edit_artist(id):
+    form = ArtistsForm()
+    if request.method == "GET":
+        db_sess = db_session.create_session()
+        artist = db_sess.query(Artist).filter(Artist.id == id).first()
+        if artist:
+            form.name.data = artist.name
+        else:
+            abort(404)
+    if form.validate_on_submit():
+        db_sess = db_session.create_session()
+        artist = db_sess.query(Artist).filter(Artist.id == id).first()
+        if artist:
+            artist.name = form.name.data
+            db_sess.commit()
+            return redirect('/artists_list')
+        else:
+            abort(404)
+    return render_template('artists_form.html',
+                           title='Artist fix',
+                           form=form
+                           )
+
+
+@app.route('/artists_delete/<int:id>', methods=['GET', 'POST'])
+@login_required
+def artist_delete(id):
+    db_sess = db_session.create_session()
+    artist = db_sess.query(Artist).filter(Artist.id == id).first()
+    if artist:
+        db_sess.delete(artist)
+        db_sess.commit()
+    else:
+        abort(404)
+    return redirect('/artists_list')
 
 
 @app.route('/login', methods=['GET', 'POST'])

@@ -2,13 +2,27 @@
 
 {% block content %}
     {% if current_user.is_authenticated %}
+        <a href="genres" class="btn btn-secondary">Add genre</a>
     {% endif %}
         <h1></h1>
-        <div class="centred">
+        <div style="width: 80%;margin-left:auto;margin-right:auto;">
             <h2>Genres</h2>
             {%for item in genres%}
-            <h3>- {{item.name}}</h3>
+            <div class="col-md6 border rounded">
+            <a>
+                <h3>- {{item.name}}</h3>
+            </a>
+                {% if current_user.is_authenticated%}
+                <div align="right">
+                    <a href="/genres/{{ item.id }}" class="btn btn-warning">
+                        Change
+                    </a>
+                    <a href="/genres_delete/{{ item.id }}" class="btn btn-danger">
+                        Delete
+                    </a>
+                </div>
+                {% endif %}
+            </div>
             {%endfor%}
-
         </div>
 {% endblock %}

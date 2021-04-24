@@ -3,6 +3,6 @@ from wtforms import StringField, SubmitField
 from wtforms.validators import DataRequired
 
 
-class GenresForm(FlaskForm):
+class ArtistsForm(FlaskForm):
     name = StringField('Name', validators=[DataRequired()])
     submit = SubmitField('Add')
