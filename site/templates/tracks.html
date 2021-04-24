@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {% if current_user.is_authenticated %}
+    {% endif %}
+    <h2 class="centred">Tracks</h2>
+    <table class="styled-table" align="middle">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Album</th>
+                <th>Artist</th>
+                <th>Duration</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in tracks %}
+            <tr class="active-row">
+                <td>{{item["track"].name}}</td>
+                <td>{{item["album"].title}}</td>
+                <td>{{item["artist"].name}}</td>
+                <td>{{item["track"].seconds}}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

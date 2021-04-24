@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {% if current_user.is_authenticated %}
+    {% endif %}
+    <h2 class="centred">Albums</h2>
+    <table class="styled-table" align="middle">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Artist</th>
+                <th>Duration</th>
+                <th>Rating</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in lst %}
+            <tr class="active-row">
+                <td>{{item["album"]["title"]}}</td>
+                <td>{{item["artist"]}}</td>
+                <td>{{item["duration"]}}</td>
+                <td>{{item["album"]["raiting"]}}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
