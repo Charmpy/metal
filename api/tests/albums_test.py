@@ -1,7 +1,7 @@
 from requests import get, post, delete, put
 
 
-print(get('http://localhost:5000/api/albums/10').json())
+print(get('http://localhost:5000/api/albums').json())
 
 print(post('http://localhost:5000/api/albums',  # Корректный запрос на добавление
            json={

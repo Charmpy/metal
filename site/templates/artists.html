@@ -2,7 +2,7 @@
 
 {% block content %}
     {% if current_user.is_authenticated %}
-        <a href="artists" class="btn btn-secondary">Add artist</a>
+        <a href="artists" class="btn btn-outline-secondary">Add artist</a>
     {% endif %}
     <h2></h2>
     <h2 class="centred">Artists</h2>
@@ -19,7 +19,7 @@
             {% for item in artists %}
             <tr class="active-row">
                 <td>{{item["artist"].id}}</td>
-                <td>{{item["artist"].name}}</td>
+                <td><h4>{{item["artist"].name}}</h4></td>
                 <td>{{item["albums"]}}</td>
                 <td>
                     {% if current_user.is_authenticated%}

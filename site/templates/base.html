@@ -12,20 +12,20 @@
     <body>
         <main role="main" class="container">
             <nav class="navbar navbar-light bg-light">
-                <a class="navbar-brand" href="#"><h2>Music hall</h2></a>
+                <a class="navbar-brand" href="/"><h2>Music hall</h2></a>
                 {% if current_user.is_authenticated %}
                     <a class="navbar-brand" href="/logout">{{ current_user.name }} {{ current_user.surname }}</a>
                 {% else %}
                     <p>
-                        <a class="btn btn-primary " href="/register">Зарегистрироваться</a>
-                        <a class="btn btn-success" href="/login">Войти</a>
+                        <a class="btn btn-outline-secondary" href="/register">Зарегистрироваться</a>
+                        <a class="btn btn-outline-secondary" href="/login">Войти</a>
                     </p>
                 {% endif %}
             </nav>
-                <a href="albums_list" class="btn btn-primary">Albums</a>
-                <a href="genres_list" class="btn btn-primary">Genres</a>
-                <a href="artists_list" class="btn btn-primary">Artists</a>
-                <a href="tracks_list" class="btn btn-primary">Tracks</a>
+                <a href="/albums_list" class="btn btn-primary">Albums</a>
+                <a href="/genres_list" class="btn btn-primary">Genres</a>
+                <a href="/artists_list" class="btn btn-primary">Artists</a>
+                <a href="/tracks_list" class="btn btn-primary">Tracks</a>
             {% block content %}{% endblock %}
         </main>
     </body>

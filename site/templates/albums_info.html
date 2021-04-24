@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {% if current_user.is_authenticated %}
+        <a href="/tracks" class="btn btn-outline-secondary">Add Track</a>
+    {% endif %}
+    <h1></h1>
+    <div class="centred">
+    <h1>{{info["album"].title}}</h1>
+    <h2>{{info["artist"].name}}</h2>
+    </div>
+    <table class="styled-table" align="middle">
+        <thead>
+        </thead>
+        <tbody>
+            {% for item in info["tracks"] %}
+            <tr class="active-row">
+                <td>{{item.id}}</td>
+                <td>{{item.name}}</td>
+                <td>{{item.seconds}} sec.</td>
+                <td>
+                    {% if current_user.is_authenticated%}
+                <div align="right">
+                    <a href="/tracks/{{ item.id }}" class="btn btn-warning">
+                        Change
+                    </a>
+                    <a href="/tracks_delete/{{ item.id }}" class="btn btn-danger">
+                        Delete
+                    </a>
+                </div>
+                {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

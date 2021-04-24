@@ -395,28 +395,32 @@ def track_delete(id):
         abort(404)
 
     info = []
-    return render_template('tracks_form.html',
-                           title='Track fix',
-                           info=info
-                           )
+    return redirect('/tracks_list')
 
 ################
 # ###--------###
 ################
 
 
-# @app.route('/album_info/<int:id>', methods=['GET', 'POST'])
-# @login_required
-# def track_delete(id):
-#     db_sess = db_session.create_session()
-#     track = db_sess.query(Track).filter(Track.id == id).first()
-#     if track:
-#         db_sess.delete(track)
-#         db_sess.commit()
-#     else:
-#         abort(404)
-#     return redirect('/tracks_list')
-#
+@app.route('/album_info/<int:id>', methods=['GET', 'POST'])
+@login_required
+def album_info(id):
+    db_sess = db_session.create_session()
+    album = db_sess.query(Album).filter(Album.id == id).first()
+    if album:
+        tracks = db_sess.query(Track).filter(Track.albumid == id).all()
+        artist = db_sess.query(Artist).filter(Artist.id == album.artistid).first()
+    else:
+        abort(404)
+    print({'album': album, 'tracks': tracks, 'artist': artist})
+    return render_template('albums_info.html',
+                           title=album.title,
+                           info={
+                               'album': album, 'tracks': tracks,
+                               'artist': artist
+                           }
+                           )
+
 
 ################
 # ###--------###

@@ -2,7 +2,7 @@
 
 {% block content %}
     {% if current_user.is_authenticated %}
-        <a href="albums" class="btn btn-secondary">Add Album</a>
+        <a href="albums" class="btn btn-outline-secondary">Add Album</a>
     {% endif %}
     <h2 class="centred">Albums</h2>
     <table class="styled-table" align="middle">
@@ -17,9 +17,11 @@
         <tbody>
             {% for item in lst %}
             <tr class="active-row">
-                <td>{{item["album"]["title"]}}</td>
+                <td>
+                    <a href="/album_info/{{item['album'].id}}" type="button" class="btn btn-light"><h5>{{item["album"]["title"]}}</h5></a>
+                </td>
                 <td>{{item["artist"]}}</td>
-                <td>{{item["duration"]}}</td>
+                <td>{{item["duration"]}} min.</td>
                 <td>
                     {% if current_user.is_authenticated%}
                 <div align="right">
