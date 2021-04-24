@@ -5,6 +5,8 @@ from flask import jsonify, abort
 from forms.user import RegisterForm
 from forms.genresform import GenresForm
 from forms.artistsform import ArtistsForm
+from forms.tracksform import TracksForm
+from forms.albumsform import AlbumsForm
 from data.loginform import LoginForm
 from data import db_session
 from data.customers import Customer
@@ -22,8 +24,8 @@ login_manager.init_app(app)
 
 def main():
     db_session.global_init("db/music_db.sqlite")
-    db_sess = db_session.create_session()
-
+    # db_sess = db_session.create_session()
+    #
     # artist = Artist(name='Queen')
     # db_sess.add(artist)
     # artist = Artist(name='Metallica')
@@ -33,10 +35,10 @@ def main():
     # db_sess.add(genre)
     # genre = Genre(name='Metal')
     # db_sess.add(genre)
-
+    #
     # album = Album(title='Master of puppets', artistid=2, raiting=0)
     # db_sess.add(album)
-
+    #
     # for name, long in [
     #     ['Battery', 312],
     #     ['Master Of Puppets', 515],
@@ -62,9 +64,9 @@ def not_found(error):
 def index():
     return render_template("index.html", title='Hall')
 
+######################
 # ##-----СПИСКИ----###
-
-
+######################
 @app.route("/albums_list")
 def albums_list():
     db_sess = db_session.create_session()
@@ -114,8 +116,9 @@ def tracks_list():
     print(out)
     return render_template("tracks.html", title='Hall', tracks=out)
 
-
+###########################
 # ###-----ДЛЯ ЖАНРА-----###
+###########################
 @app.route('/genres',  methods=['GET', 'POST'])
 @login_required
 def add_genre():
@@ -169,8 +172,9 @@ def genre_delete(id):
         abort(404)
     return redirect('/genres_list')
 
-
+#############################
 # ###-----ДЛЯ АРТИСТОВ----###
+#############################
 @app.route('/artists',  methods=['GET', 'POST'])
 @login_required
 def add_artist():
@@ -223,6 +227,206 @@ def artist_delete(id):
     else:
         abort(404)
     return redirect('/artists_list')
+
+#############################
+# ###-----ДЛЯ АЛЬБОМОВ----###
+#############################
+@app.route('/albums',  methods=['GET', 'POST'])
+@login_required
+def add_albums():
+    db_sess = db_session.create_session()
+    artist = db_sess.query(Artist).all()
+    choices = []
+    for i in artist:
+        choices.append((i.id, i.name))
+
+    form = AlbumsForm()
+    form.artistid.choices = choices
+
+    if form.validate_on_submit():
+        album = Album()
+        album.title = form.title.data
+        album.artistid = form.artistid.data
+        db_sess.add(album)
+        db_sess.commit()
+        return redirect('/albums_list')
+    return render_template('albums_form.html', title='Artist adding',
+                           form=form)
+
+
+@app.route('/albums/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edit_albums(id):
+    db_sess = db_session.create_session()
+    artist = db_sess.query(Artist).all()
+    choices = []
+    for i in artist:
+        choices.append((i.id, i.name))
+
+    form = AlbumsForm()
+    form.artistid.choices = choices
+
+    if request.method == "GET":
+        db_sess = db_session.create_session()
+        album = db_sess.query(Album).filter(Album.id == id).first()
+        if album:
+            form.title.data = album.title
+            form.artistid.data = album.artistid
+        else:
+            abort(404)
+    if form.validate_on_submit():
+        db_sess = db_session.create_session()
+        album = db_sess.query(Album).filter(Album.id == id).first()
+        if album:
+            album.title = form.title.data
+            album.artistid = form.artistid.data
+            db_sess.commit()
+            return redirect('/albums_list')
+        else:
+            abort(404)
+    return render_template('albums_form.html',
+                           title='Album fix',
+                           form=form
+                           )
+
+
+@app.route('/albums_delete/<int:id>', methods=['GET', 'POST'])
+@login_required
+def albums_delete(id):
+    db_sess = db_session.create_session()
+    album = db_sess.query(Album).filter(Album.id == id).first()
+    if album:
+        db_sess.delete(album)
+        db_sess.commit()
+    else:
+        abort(404)
+    return redirect('/albums_list')
+
+
+######################
+# ###----ТРЕКИ-----###
+######################
+@app.route('/tracks',  methods=['GET', 'POST'])
+@login_required
+def add_tracks():
+    db_sess = db_session.create_session()
+    artist = db_sess.query(Album).all()
+    art_choices = []
+    for i in artist:
+        art_choices.append((i.id, i.title))
+
+    genre = db_sess.query(Genre).all()
+    gen_choices = []
+    for i in genre:
+        gen_choices.append((i.id, i.name))
+
+    form = TracksForm()
+    form.albumid.choices = art_choices
+    form.genreid.choices = gen_choices
+
+    if form.validate_on_submit():
+        track = Track()
+        track.name = form.name.data
+        track.albumid = form.albumid.data
+        track.genreid = form.genreid.data
+        track.seconds = form.seconds.data
+        db_sess.add(track)
+        db_sess.commit()
+        return redirect('/tracks_list')
+    return render_template('tracks_form.html', title='Artist adding',
+                           form=form)
+
+
+@app.route('/tracks/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edit_tracks(id):
+    db_sess = db_session.create_session()
+    artist = db_sess.query(Album).all()
+    art_choices = []
+    for i in artist:
+        art_choices.append((i.id, i.title))
+
+    genre = db_sess.query(Genre).all()
+    gen_choices = []
+    for i in genre:
+        gen_choices.append((i.id, i.name))
+
+    form = TracksForm()
+    form.albumid.choices = art_choices
+    form.genreid.choices = gen_choices
+
+    if request.method == "GET":
+        db_sess = db_session.create_session()
+        track = db_sess.query(Track).filter(Track.id == id).first()
+        if track:
+            form.name.data = track.name
+            form.albumid.data = track.albumid
+            form.genreid.data = track.genreid
+            form.seconds.data = track.seconds
+        else:
+            abort(404)
+    if form.validate_on_submit():
+        db_sess = db_session.create_session()
+        track = db_sess.query(Track).filter(Track.id == id).first()
+        if track:
+            track.name = form.name.data
+            track.albumid = form.albumid.data
+            track.genreid = form.genreid.data
+            track.seconds = form.seconds.data
+            db_sess.commit()
+            return redirect('/tracks_list')
+        else:
+            abort(404)
+    return render_template('tracks_form.html',
+                           title='Track fix',
+                           form=form
+                           )
+
+
+@app.route('/tracks_delete/<int:id>', methods=['GET', 'POST'])
+@login_required
+def track_delete(id):
+    db_sess = db_session.create_session()
+    track = db_sess.query(Track).filter(Track.id == id).first()
+    if track:
+        db_sess.delete(track)
+        db_sess.commit()
+    else:
+        abort(404)
+
+    info = []
+    return render_template('tracks_form.html',
+                           title='Track fix',
+                           info=info
+                           )
+
+################
+# ###--------###
+################
+
+
+# @app.route('/album_info/<int:id>', methods=['GET', 'POST'])
+# @login_required
+# def track_delete(id):
+#     db_sess = db_session.create_session()
+#     track = db_sess.query(Track).filter(Track.id == id).first()
+#     if track:
+#         db_sess.delete(track)
+#         db_sess.commit()
+#     else:
+#         abort(404)
+#     return redirect('/tracks_list')
+#
+
+################
+# ###--------###
+################
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect("/")
 
 
 @app.route('/login', methods=['GET', 'POST'])
