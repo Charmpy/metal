@@ -18,6 +18,7 @@ login_manager.init_app(app)
 
 keeper = DataKeeper()
 
+
 def main():
     keeper.globon()
     app.run()

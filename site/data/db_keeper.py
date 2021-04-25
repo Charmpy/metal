@@ -4,79 +4,28 @@ from .artists import Artist
 from .albums import Album
 from .tracks import Track
 from .customers import Customer
+from .pretty_resource import PrettyResource
 
 
 class DataKeeper:
     def globon(self):
         db_session.global_init("db/music_db.sqlite")
-        # db_sess = db_session.create_session()
-        #
-        # artist = Artist(name='Queen')
-        # db_sess.add(artist)
-        # artist = Artist(name='Metallica')
-        # db_sess.add(artist)
-        #
-        # genre = Genre(name='Rock')
-        # db_sess.add(genre)
-        # genre = Genre(name='Metal')
-        # db_sess.add(genre)
-        #
-        # album = Album(title='Master of puppets', artistid=2, raiting=0)
-        # db_sess.add(album)
-        #
-        # for name, long in [
-        #     ['Battery', 312],
-        #     ['Master Of Puppets', 515],
-        #     ['The Thing That Should Not Be', 396],
-        #     ['Welcome Home (Sanitarium)', 387],
-        #     ['Disposable Heroes', 496],
-        #     ['Leper Messiah', 339],
-        #     ['Orion', 507],
-        #     ['Damage, Inc.', 332]
-        # ]:
-        #     db_sess.add(Track(name=name, albumid=1, genreid=2, seconds=long))
-        #
-        # db_sess.commit()
+        self.pretty = PrettyResource()
 
     def get_pretty_albums_list(self):
-        db_sess = db_session.create_session()
-        albums = db_sess.query(Album).all()
-        out = []
-        for i in albums:
-            tracks = db_sess.query(Track).filter(Track.albumid == i.id).all()
-            artist = db_sess.query(Artist).filter(
-                Artist.id == i.artistid).first().name
-            duration = sum(map(lambda x: x.seconds, tracks))
-            out.append(
-                {'album': i, 'duration': duration // 60, 'artist': artist}
-            )
+        out = self.pretty.get('albums')
         return out
 
     def get_genres(self):
-        db_sess = db_session.create_session()
-        genres = db_sess.query(Genre).all()
+        genres = self.pretty.get('genres')
         return genres
 
     def get_pretty_artists_list(self):
-        db_sess = db_session.create_session()
-        artists = db_sess.query(Artist).all()
-        out = []
-        for i in artists:
-            k = len(db_sess.query(Album).filter(Album.artistid == i.id).all())
-            out.append({'artist': i, 'albums': k})
+        out = self.pretty.get('artists')
         return out
 
     def get_pretty_tracks_list(self):
-        db_sess = db_session.create_session()
-        tracks = db_sess.query(Track).all()
-        out = []
-        for i in tracks:
-            artist = db_sess.query(Artist).filter(
-                Artist.id == db_sess.query(Album).filter(Album.id == i.albumid
-                                                         ).first().artistid
-            ).first()
-            album = db_sess.query(Album).filter(Album.id == i.albumid).first()
-            out.append({'track': i, 'album': album, 'artist': artist})
+        out = self.pretty.get('tracks')
         return out
 
     ###########################
