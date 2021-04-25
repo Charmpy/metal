@@ -4,7 +4,8 @@
     {% if current_user.is_authenticated %}
         <a href="genres" class="btn btn-outline-secondary">Add genre</a>
     {% endif %}
-    <h1 class="centred">Genres</h1>
+
+    <h1 class="centred"><br>Genres</h1>
     <table class="styled-table" align="middle">
         <tbody>
             {%for item in genres%}

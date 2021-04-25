@@ -8,12 +8,7 @@ from forms.artistsform import ArtistsForm
 from forms.tracksform import TracksForm
 from forms.albumsform import AlbumsForm
 from data.loginform import LoginForm
-from data import db_session
-from data.customers import Customer
-from data.genres import Genre
-from data.artists import Artist
-from data.albums import Album
-from data.tracks import Track
+from data.db_keeper import DataKeeper
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
@@ -21,37 +16,10 @@ app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 login_manager = LoginManager()
 login_manager.init_app(app)
 
+keeper = DataKeeper()
 
 def main():
-    db_session.global_init("db/music_db.sqlite")
-    # db_sess = db_session.create_session()
-    #
-    # artist = Artist(name='Queen')
-    # db_sess.add(artist)
-    # artist = Artist(name='Metallica')
-    # db_sess.add(artist)
-    #
-    # genre = Genre(name='Rock')
-    # db_sess.add(genre)
-    # genre = Genre(name='Metal')
-    # db_sess.add(genre)
-    #
-    # album = Album(title='Master of puppets', artistid=2, raiting=0)
-    # db_sess.add(album)
-    #
-    # for name, long in [
-    #     ['Battery', 312],
-    #     ['Master Of Puppets', 515],
-    #     ['The Thing That Should Not Be', 396],
-    #     ['Welcome Home (Sanitarium)', 387],
-    #     ['Disposable Heroes', 496],
-    #     ['Leper Messiah', 339],
-    #     ['Orion', 507],
-    #     ['Damage, Inc.', 332]
-    # ]:
-    #     db_sess.add(Track(name=name, albumid=1, genreid=2, seconds=long))
-    #
-    # db_sess.commit()
+    keeper.globon()
     app.run()
 
 
@@ -64,57 +32,33 @@ def not_found(error):
 def index():
     return render_template("index.html", title='Hall')
 
+
 ######################
 # ##-----СПИСКИ----###
 ######################
 @app.route("/albums_list")
 def albums_list():
-    db_sess = db_session.create_session()
-    albums = db_sess.query(Album).all()
-    out = []
-    for i in albums:
-        tracks = db_sess.query(Track).filter(Track.albumid == i.id).all()
-        artist = db_sess.query(Artist).filter(
-            Artist.id == i.artistid).first().name
-        duration = sum(map(lambda x: x.seconds, tracks))
-        print(duration)
-        out.append({'album': i, 'duration': duration // 60, 'artist': artist})
-    return render_template("albums.html", title='Hall', lst=out)
+    info = keeper.get_pretty_albums_list()
+    return render_template("albums.html", title='Hall', lst=info)
 
 
 @app.route("/genres_list")
 def genres_list():
-    db_sess = db_session.create_session()
-    genres = db_sess.query(Genre).all()
-    print(genres)
+    genres = keeper.get_genres()
     return render_template("genres.html", title='Hall', genres=genres)
 
 
 @app.route("/artists_list")
 def artists_list():
-    db_sess = db_session.create_session()
-    artists = db_sess.query(Artist).all()
-    out = []
-    for i in artists:
-        k = len(db_sess.query(Album).filter(Album.artistid == i.id).all())
-        out.append({'artist': i, 'albums': k})
+    out = keeper.get_pretty_artists_list()
     return render_template("artists.html", title='Hall', artists=out)
 
 
 @app.route("/tracks_list")
 def tracks_list():
-    db_sess = db_session.create_session()
-    tracks = db_sess.query(Track).all()
-    out = []
-    for i in tracks:
-        artist = db_sess.query(Artist).filter(
-            Artist.id == db_sess.query(Album).filter(Album.id == i.albumid
-                                                     ).first().artistid
-        ).first()
-        album = db_sess.query(Album).filter(Album.id == i.albumid).first()
-        out.append({'track': i, 'album': album, 'artist': artist})
-    print(out)
+    out = keeper.get_pretty_tracks_list()
     return render_template("tracks.html", title='Hall', tracks=out)
+
 
 ###########################
 # ###-----ДЛЯ ЖАНРА-----###
@@ -124,11 +68,7 @@ def tracks_list():
 def add_genre():
     form = GenresForm()
     if form.validate_on_submit():
-        db_sess = db_session.create_session()
-        genre = Genre()
-        genre.name = form.name.data
-        db_sess.add(genre)
-        db_sess.commit()
+        keeper.add_genre(form.name.data)
         return redirect('/genres_list')
     return render_template('genres_form.html', title='Genre adding',
                            form=form)
@@ -139,18 +79,14 @@ def add_genre():
 def edit_genre(id):
     form = GenresForm()
     if request.method == "GET":
-        db_sess = db_session.create_session()
-        genre = db_sess.query(Genre).filter(Genre.id == id).first()
+        genre = keeper.edit_genre_ac(id)
         if genre:
             form.name.data = genre.name
         else:
             abort(404)
     if form.validate_on_submit():
-        db_sess = db_session.create_session()
-        genre = db_sess.query(Genre).filter(Genre.id == id).first()
+        genre = keeper.edit_genre(id, form.name.data)
         if genre:
-            genre.name = form.name.data
-            db_sess.commit()
             return redirect('/genres_list')
         else:
             abort(404)
@@ -163,14 +99,11 @@ def edit_genre(id):
 @app.route('/genres_delete/<int:id>', methods=['GET', 'POST'])
 @login_required
 def genre_delete(id):
-    db_sess = db_session.create_session()
-    genre = db_sess.query(Genre).filter(Genre.id == id).first()
-    if genre:
-        db_sess.delete(genre)
-        db_sess.commit()
-    else:
+    genre = keeper.delete_genre(id)
+    if not genre:
         abort(404)
     return redirect('/genres_list')
+
 
 #############################
 # ###-----ДЛЯ АРТИСТОВ----###
@@ -180,11 +113,7 @@ def genre_delete(id):
 def add_artist():
     form = ArtistsForm()
     if form.validate_on_submit():
-        db_sess = db_session.create_session()
-        artist = Artist()
-        artist.name = form.name.data
-        db_sess.add(artist)
-        db_sess.commit()
+        keeper.add_artist(form.name.data)
         return redirect('/artists_list')
     return render_template('artists_form.html', title='Artist adding',
                            form=form)
@@ -195,18 +124,14 @@ def add_artist():
 def edit_artist(id):
     form = ArtistsForm()
     if request.method == "GET":
-        db_sess = db_session.create_session()
-        artist = db_sess.query(Artist).filter(Artist.id == id).first()
+        artist = keeper.edit_artist_ac(id)
         if artist:
             form.name.data = artist.name
         else:
             abort(404)
     if form.validate_on_submit():
-        db_sess = db_session.create_session()
-        artist = db_sess.query(Artist).filter(Artist.id == id).first()
+        artist = keeper.edit_artist(id, form.name.data)
         if artist:
-            artist.name = form.name.data
-            db_sess.commit()
             return redirect('/artists_list')
         else:
             abort(404)
@@ -219,14 +144,11 @@ def edit_artist(id):
 @app.route('/artists_delete/<int:id>', methods=['GET', 'POST'])
 @login_required
 def artist_delete(id):
-    db_sess = db_session.create_session()
-    artist = db_sess.query(Artist).filter(Artist.id == id).first()
-    if artist:
-        db_sess.delete(artist)
-        db_sess.commit()
-    else:
+    artist = keeper.delete_artist(id)
+    if not artist:
         abort(404)
     return redirect('/artists_list')
+
 
 #############################
 # ###-----ДЛЯ АЛЬБОМОВ----###
@@ -234,21 +156,10 @@ def artist_delete(id):
 @app.route('/albums',  methods=['GET', 'POST'])
 @login_required
 def add_albums():
-    db_sess = db_session.create_session()
-    artist = db_sess.query(Artist).all()
-    choices = []
-    for i in artist:
-        choices.append((i.id, i.name))
-
     form = AlbumsForm()
-    form.artistid.choices = choices
-
+    form.artistid.choices = keeper.get_artists_choices()
     if form.validate_on_submit():
-        album = Album()
-        album.title = form.title.data
-        album.artistid = form.artistid.data
-        db_sess.add(album)
-        db_sess.commit()
+        keeper.add_album(form.title.data, form.artistid.data)
         return redirect('/albums_list')
     return render_template('albums_form.html', title='Artist adding',
                            form=form)
@@ -257,30 +168,19 @@ def add_albums():
 @app.route('/albums/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edit_albums(id):
-    db_sess = db_session.create_session()
-    artist = db_sess.query(Artist).all()
-    choices = []
-    for i in artist:
-        choices.append((i.id, i.name))
-
     form = AlbumsForm()
-    form.artistid.choices = choices
+    form.artistid.choices = keeper.get_artists_choices()
 
     if request.method == "GET":
-        db_sess = db_session.create_session()
-        album = db_sess.query(Album).filter(Album.id == id).first()
+        album = keeper.edit_album_ac(id)
         if album:
             form.title.data = album.title
             form.artistid.data = album.artistid
         else:
             abort(404)
     if form.validate_on_submit():
-        db_sess = db_session.create_session()
-        album = db_sess.query(Album).filter(Album.id == id).first()
+        album = keeper.edit_album(id, form.title.data, form.artistid.data)
         if album:
-            album.title = form.title.data
-            album.artistid = form.artistid.data
-            db_sess.commit()
             return redirect('/albums_list')
         else:
             abort(404)
@@ -293,12 +193,8 @@ def edit_albums(id):
 @app.route('/albums_delete/<int:id>', methods=['GET', 'POST'])
 @login_required
 def albums_delete(id):
-    db_sess = db_session.create_session()
-    album = db_sess.query(Album).filter(Album.id == id).first()
-    if album:
-        db_sess.delete(album)
-        db_sess.commit()
-    else:
+    album = keeper.delete_album(id)
+    if not album:
         abort(404)
     return redirect('/albums_list')
 
@@ -309,29 +205,16 @@ def albums_delete(id):
 @app.route('/tracks',  methods=['GET', 'POST'])
 @login_required
 def add_tracks():
-    db_sess = db_session.create_session()
-    artist = db_sess.query(Album).all()
-    art_choices = []
-    for i in artist:
-        art_choices.append((i.id, i.title))
-
-    genre = db_sess.query(Genre).all()
-    gen_choices = []
-    for i in genre:
-        gen_choices.append((i.id, i.name))
-
     form = TracksForm()
-    form.albumid.choices = art_choices
-    form.genreid.choices = gen_choices
+
+    form.albumid.choices = keeper.get_albums_choices()
+    form.genreid.choices = keeper.get_genres_choices()
 
     if form.validate_on_submit():
-        track = Track()
-        track.name = form.name.data
-        track.albumid = form.albumid.data
-        track.genreid = form.genreid.data
-        track.seconds = form.seconds.data
-        db_sess.add(track)
-        db_sess.commit()
+        keeper.add_track(
+            form.name.data, form.albumid.data,
+            form.genreid.data, form.seconds.data
+        )
         return redirect('/tracks_list')
     return render_template('tracks_form.html', title='Artist adding',
                            form=form)
@@ -340,24 +223,13 @@ def add_tracks():
 @app.route('/tracks/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edit_tracks(id):
-    db_sess = db_session.create_session()
-    artist = db_sess.query(Album).all()
-    art_choices = []
-    for i in artist:
-        art_choices.append((i.id, i.title))
-
-    genre = db_sess.query(Genre).all()
-    gen_choices = []
-    for i in genre:
-        gen_choices.append((i.id, i.name))
-
     form = TracksForm()
-    form.albumid.choices = art_choices
-    form.genreid.choices = gen_choices
+
+    form.albumid.choices = keeper.get_albums_choices()
+    form.genreid.choices = keeper.get_genres_choices()
 
     if request.method == "GET":
-        db_sess = db_session.create_session()
-        track = db_sess.query(Track).filter(Track.id == id).first()
+        track = keeper.edit_track_ac(id)
         if track:
             form.name.data = track.name
             form.albumid.data = track.albumid
@@ -366,14 +238,12 @@ def edit_tracks(id):
         else:
             abort(404)
     if form.validate_on_submit():
-        db_sess = db_session.create_session()
-        track = db_sess.query(Track).filter(Track.id == id).first()
+        track = keeper.edit_track(
+            id,
+            form.name.data, form.albumid.data,
+            form.genreid.data, form.seconds.data
+        )
         if track:
-            track.name = form.name.data
-            track.albumid = form.albumid.data
-            track.genreid = form.genreid.data
-            track.seconds = form.seconds.data
-            db_sess.commit()
             return redirect('/tracks_list')
         else:
             abort(404)
@@ -386,15 +256,9 @@ def edit_tracks(id):
 @app.route('/tracks_delete/<int:id>', methods=['GET', 'POST'])
 @login_required
 def track_delete(id):
-    db_sess = db_session.create_session()
-    track = db_sess.query(Track).filter(Track.id == id).first()
-    if track:
-        db_sess.delete(track)
-        db_sess.commit()
-    else:
+    track = keeper.delete_track(id)
+    if not track:
         abort(404)
-
-    info = []
     return redirect('/tracks_list')
 
 ################
@@ -403,23 +267,13 @@ def track_delete(id):
 
 
 @app.route('/album_info/<int:id>', methods=['GET', 'POST'])
-@login_required
 def album_info(id):
-    db_sess = db_session.create_session()
-    album = db_sess.query(Album).filter(Album.id == id).first()
-    if album:
-        tracks = db_sess.query(Track).filter(Track.albumid == id).all()
-        artist = db_sess.query(Artist).filter(Artist.id == album.artistid).first()
-    else:
+    album = keeper.get_pretty_album_info(id)
+    if not album:
         abort(404)
-    print({'album': album, 'tracks': tracks, 'artist': artist})
-    return render_template('albums_info.html',
-                           title=album.title,
-                           info={
-                               'album': album, 'tracks': tracks,
-                               'artist': artist
-                           }
-                           )
+    return render_template(
+        'albums_info.html', title=album["album"].title, info=album
+    )
 
 
 ################
@@ -437,9 +291,9 @@ def logout():
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-        db_sess = db_session.create_session()
-        user = db_sess.query(Customer).filter(Customer.email == form.email.data).first()
-        if user and user.check_password(form.password.data):
+
+        user = keeper.login_user(form.email.data, form.password.data)
+        if user:
             login_user(user, remember=form.remember_me.data)
             return redirect("/")
         return render_template('login.html',
@@ -456,27 +310,20 @@ def reqister():
             return render_template('register.html', title='Регистрация',
                                    form=form,
                                    message="Пароли не совпадают")
-        db_sess = db_session.create_session()
-        if db_sess.query(Customer).filter(Customer.email == form.email.data).first():
+        new_user = keeper.register(
+            form.email.data, form.password.data, form.name.data, form.surname.data
+        )
+        if new_user:
             return render_template('register.html', title='Регистрация',
                                    form=form,
                                    message="Такой пользователь уже есть")
-        user = Customer(
-            name=form.name.data,
-            surname=form.surname.data,
-            email=form.email.data,
-        )
-        user.set_password(form.password.data)
-        db_sess.add(user)
-        db_sess.commit()
         return redirect('/login')
     return render_template('register.html', title='Регистрация', form=form)
 
 
 @login_manager.user_loader
 def load_user(user_id):
-    db_sess = db_session.create_session()
-    return db_sess.query(Customer).get(user_id)
+    return keeper.load_user(user_id)
 
 
 if __name__ == '__main__':
