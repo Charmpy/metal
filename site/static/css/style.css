@@ -37,7 +37,7 @@ form.login_form {
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
 }
 .styled-table thead tr {
-    background-color: #009879;
+    background-color: #494949;
     color: #ffffff;
     text-align: left;
 }
@@ -54,11 +54,11 @@ form.login_form {
 }
 
 .styled-table tbody tr:last-of-type {
-    border-bottom: 2px solid #009879;
+    border-bottom: 2px solid #494949;
 }
 .styled-table tbody tr.active-row {
     font-weight: bold;
-    color: #009879;
+    color: #494949;
 }
 
 .cool {

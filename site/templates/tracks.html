@@ -18,7 +18,7 @@
         <tbody>
             {% for item in tracks %}
             <tr class="active-row">
-                <td>{{item["track"].name}}</td>
+                <td><h5>{{item["track"].name}}</h5></td>
                                 <td>
                     <a href="/album_info/{{item['album'].id}}" type="button" class="btn btn-light">{{item["album"].title}}</a>
                 </td>
