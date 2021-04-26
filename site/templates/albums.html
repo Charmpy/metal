@@ -18,17 +18,17 @@
             {% for item in lst %}
             <tr class="active-row">
                 <td>
-                    <a href="/album_info/{{item['album'].id}}" type="button" class="btn btn-light"><h5>{{item["album"]["title"]}}</h5></a>
+                    <a href="/album_info/{{item['album']['id']}}" type="button" class="btn btn-light"><h5>{{item["album"]["title"]}}</h5></a>
                 </td>
                 <td>{{item["artist"]}}</td>
                 <td>{{item["duration"]}} min.</td>
                 <td>
                     {% if current_user.is_authenticated%}
                 <div align="right">
-                    <a href="/albums/{{ item['album'].id }}" class="btn btn-warning">
+                    <a href="/albums/{{ item['album']['id'] }}" class="btn btn-warning">
                         Change
                     </a>
-                    <a href="/albums_delete/{{ item['album'].id }}" class="btn btn-danger">
+                    <a href="/albums_delete/{{ item['album']['id'] }}" class="btn btn-danger">
                         Delete
                     </a>
                 </div>

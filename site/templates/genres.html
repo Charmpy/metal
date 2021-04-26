@@ -10,14 +10,14 @@
         <tbody>
             {%for item in genres%}
             <tr class="active-row">
-                <td><h3> - {{item.name}}</h3></td>
+                <td><h3> - {{item["genre"]["name"]}}</h3></td>
                     {% if current_user.is_authenticated%}
                 <td>
                 <div align="right">
-                    <a href="/genres/{{ item.id }}" class="btn btn-warning">
+                    <a href="/genres/{{ item['genre']['id'] }}" class="btn btn-warning">
                         Change
                     </a>
-                    <a href="/genres_delete/{{ item.id }}" class="btn btn-danger">
+                    <a href="/genres_delete/{{ item['genre']['id'] }}" class="btn btn-danger">
                         Delete
                     </a>
                 </div>

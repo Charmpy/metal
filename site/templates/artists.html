@@ -18,16 +18,16 @@
         <tbody>
             {% for item in artists %}
             <tr class="active-row">
-                <td>{{item["artist"].id}}</td>
-                <td><h4>{{item["artist"].name}}</h4></td>
+                <td>{{item["artist"]['id']}}</td>
+                <td><h4>{{item["artist"]['name']}}</h4></td>
                 <td>{{item["albums"]}}</td>
                 <td>
                     {% if current_user.is_authenticated%}
                 <div align="right">
-                    <a href="/artists/{{ item['artist'].id }}" class="btn btn-warning">
+                    <a href="/artists/{{ item['artist']['id'] }}" class="btn btn-warning">
                         Change
                     </a>
-                    <a href="/artists_delete/{{ item['artist'].id }}" class="btn btn-danger">
+                    <a href="/artists_delete/{{ item['artist']['id'] }}" class="btn btn-danger">
                         Delete
                     </a>
                 </div>

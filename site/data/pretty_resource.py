@@ -1,4 +1,5 @@
 from flask_restful import Resource
+from flask import jsonify
 from . import db_session
 from .genres import Genre
 from .artists import Artist
@@ -19,12 +20,20 @@ class PrettyResource(Resource):
                     Artist.id == i.artistid).first().name
                 duration = sum(map(lambda x: x.seconds, tracks))
                 out.append(
-                    {'album': i, 'duration': duration // 60, 'artist': artist}
+                    {'album': i.to_dict(
+                            only=(
+                                'id', 'title'
+                            )), 'duration': duration // 60,
+                        'artist': artist}
                 )
-            return out
+            return jsonify(out)
+
         elif param == 'genres':
             genres = db_sess.query(Genre).all()
-            return genres
+            out = []
+            for i in genres:
+                out.append({'genre': {'id': i.id, 'name': i.name}})
+            return jsonify(out)
 
         elif param == 'artists':
             artists = db_sess.query(Artist).all()
@@ -32,7 +41,10 @@ class PrettyResource(Resource):
             for i in artists:
                 k = len(
                     db_sess.query(Album).filter(Album.artistid == i.id).all())
-                out.append({'artist': i, 'albums': k})
+                out.append({'artist': i.to_dict(
+                            only=(
+                                'id', 'name'
+                            )), 'albums': k})
             return out
 
         elif param == 'tracks':
@@ -46,6 +58,17 @@ class PrettyResource(Resource):
                 ).first()
                 album = db_sess.query(Album).filter(
                     Album.id == i.albumid).first()
-                out.append({'track': i, 'album': album, 'artist': artist})
+                out.append({'track': i.to_dict(
+                            only=(
+                                'id', 'name', 'seconds'
+                            )),
+                            'album': album.to_dict(
+                            only=(
+                                'id', 'title'
+                            )),
+                            'artist': artist.to_dict(
+                            only=(
+                                'id', 'name'
+                            ))})
             return out
         return {'message': 'Bad param'}

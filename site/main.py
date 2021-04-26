@@ -9,6 +9,9 @@ from forms.tracksform import TracksForm
 from forms.albumsform import AlbumsForm
 from data.loginform import LoginForm
 from data.db_keeper import DataKeeper
+from data.pretty_resource import PrettyResource
+from flask_restful import abort, Api
+
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
@@ -17,6 +20,10 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 
 keeper = DataKeeper()
+
+api = Api(app)
+
+api.add_resource(PrettyResource, '/api/pretty/<param>')
 
 
 def main():

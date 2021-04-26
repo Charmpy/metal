@@ -20,17 +20,17 @@
             <tr class="active-row">
                 <td><h5>{{item["track"].name}}</h5></td>
                                 <td>
-                    <a href="/album_info/{{item['album'].id}}" type="button" class="btn btn-light">{{item["album"].title}}</a>
+                    <a href="/album_info/{{item['album']['id']}}" type="button" class="btn btn-light">{{item["album"]['title']}}</a>
                 </td>
-                <td>{{item["artist"].name}}</td>
-                <td>{{item["track"].seconds}} sec.</td>
+                <td>{{item["artist"]['name']}}</td>
+                <td>{{item["track"]['seconds']}} sec.</td>
                 <td>
                     {% if current_user.is_authenticated%}
                 <div align="right">
-                    <a href="/tracks/{{ item['track'].id }}" class="btn btn-warning">
+                    <a href="/tracks/{{ item['track']['id'] }}" class="btn btn-warning">
                         Change
                     </a>
-                    <a href="/tracks_delete/{{ item['track'].id }}" class="btn btn-danger">
+                    <a href="/tracks_delete/{{ item['track']['id'] }}" class="btn btn-danger">
                         Delete
                     </a>
                 </div>

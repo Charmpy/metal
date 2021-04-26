@@ -5,6 +5,8 @@ from .albums import Album
 from .tracks import Track
 from .customers import Customer
 from .pretty_resource import PrettyResource
+from requests import get
+
 
 
 class DataKeeper:
@@ -13,19 +15,19 @@ class DataKeeper:
         self.pretty = PrettyResource()
 
     def get_pretty_albums_list(self):
-        out = self.pretty.get('albums')
+        out = get('http://localhost:5000/api/pretty/albums').json()
         return out
 
     def get_genres(self):
-        genres = self.pretty.get('genres')
+        genres = get('http://localhost:5000/api/pretty/genres').json()
         return genres
 
     def get_pretty_artists_list(self):
-        out = self.pretty.get('artists')
+        out = get('http://localhost:5000/api/pretty/artists').json()
         return out
 
     def get_pretty_tracks_list(self):
-        out = self.pretty.get('tracks')
+        out = get('http://localhost:5000/api/pretty/tracks').json()
         return out
 
     ###########################
