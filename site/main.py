@@ -10,6 +10,10 @@ from forms.albumsform import AlbumsForm
 from data.loginform import LoginForm
 from data.db_keeper import DataKeeper
 from data.pretty_resource import PrettyResource
+from data.genres_resource import GenresResource, GenresListResource
+from data.artists_resource import ArtistsListResource, ArtistsResource
+from data.albums_resource import AlbumsListResource, AlbumsResource
+from data.tracks_resource import TracksListResource, TracksResource
 from flask_restful import abort, Api
 
 
@@ -24,6 +28,18 @@ keeper = DataKeeper()
 api = Api(app)
 
 api.add_resource(PrettyResource, '/api/pretty/<param>')
+
+api.add_resource(GenresResource, '/api/genres/<int:genre_id>')
+api.add_resource(GenresListResource, '/api/genres')
+
+api.add_resource(ArtistsResource, '/api/artists/<int:artist_id>')
+api.add_resource(ArtistsListResource, '/api/artists')
+
+api.add_resource(AlbumsResource, '/api/albums/<int:album_id>')
+api.add_resource(AlbumsListResource, '/api/albums')
+
+api.add_resource(TracksResource, '/api/tracks/<int:track_id>')
+api.add_resource(TracksListResource, '/api/tracks')
 
 
 def main():

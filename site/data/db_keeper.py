@@ -4,30 +4,77 @@ from .artists import Artist
 from .albums import Album
 from .tracks import Track
 from .customers import Customer
-from .pretty_resource import PrettyResource
 from requests import get
-
 
 
 class DataKeeper:
     def globon(self):
         db_session.global_init("db/music_db.sqlite")
-        self.pretty = PrettyResource()
 
     def get_pretty_albums_list(self):
-        out = get('http://localhost:5000/api/pretty/albums').json()
+        db_sess = db_session.create_session()
+        albums = db_sess.query(Album).filter(Album.id > 0).all()
+        out = []
+        for i in albums:
+            tracks = db_sess.query(Track).filter(
+                Track.albumid == i.id).all()
+            artist = db_sess.query(Artist).filter(
+                Artist.id == i.artistid).first().name
+            duration = sum(map(lambda x: x.seconds, tracks))
+            out.append(
+                {'album': i.to_dict(
+                    only=(
+                        'id', 'title'
+                    )), 'duration': duration // 60,
+                    'artist': artist}
+            )
         return out
 
     def get_genres(self):
-        genres = get('http://localhost:5000/api/pretty/genres').json()
-        return genres
+        db_sess = db_session.create_session()
+        genres = db_sess.query(Genre).filter(Genre.id > 0).all()
+        out = []
+        for i in genres:
+            out.append({'genre': {'id': i.id, 'name': i.name}})
+        return out
 
     def get_pretty_artists_list(self):
-        out = get('http://localhost:5000/api/pretty/artists').json()
+        db_sess = db_session.create_session()
+        artists = db_sess.query(Artist).filter(Artist.id > 0).all()
+        out = []
+        for i in artists:
+            k = len(
+                db_sess.query(Album).filter(Album.artistid == i.id).all())
+            out.append({'artist': i.to_dict(
+                only=(
+                    'id', 'name'
+                )), 'albums': k})
         return out
 
     def get_pretty_tracks_list(self):
-        out = get('http://localhost:5000/api/pretty/tracks').json()
+        db_sess = db_session.create_session()
+        tracks = db_sess.query(Track).all()
+        out = []
+        for i in tracks:
+            artist = db_sess.query(Artist).filter(
+                Artist.id == db_sess.query(Album).filter(
+                    Album.id == i.albumid
+                ).first().artistid
+            ).first()
+            album = db_sess.query(Album).filter(
+                Album.id == i.albumid).first()
+            out.append({'track': i.to_dict(
+                only=(
+                    'id', 'name', 'seconds'
+                )),
+                'album': album.to_dict(
+                    only=(
+                        'id', 'title'
+                    )),
+                'artist': artist.to_dict(
+                    only=(
+                        'id', 'name'
+                    ))})
         return out
 
     ###########################
@@ -43,23 +90,40 @@ class DataKeeper:
 
     def edit_genre_ac(self, id):
         db_sess = db_session.create_session()
-        genre = db_sess.query(Genre).filter(Genre.id == id).first()
+        genre = db_sess.query(Genre).filter(
+            Genre.id == id, Genre.id > 0).first()
         if genre:
             return genre
         return False
 
     def edit_genre(self, id, name):
         db_sess = db_session.create_session()
-        genre = db_sess.query(Genre).filter(Genre.id == id).first()
+        genre = db_sess.query(Genre).filter(
+            Genre.id == id, Genre.id > 0
+        ).first()
         if genre:
             genre.name = name
             db_sess.commit()
             return True
         return False
 
+    def get_genre(self, id):
+        db_sess = db_session.create_session()
+        genre = db_sess.query(Genre).filter(
+            Genre.id == id, Genre.id > 0
+        ).first()
+        if genre:
+            return {'genre': genre.to_dict(
+                only=(
+                    'id', 'name'
+                ))}
+        return False
+
     def delete_genre(self, id):
         db_sess = db_session.create_session()
-        genre = db_sess.query(Genre).filter(Genre.id == id).first()
+        genre = db_sess.query(Genre).filter(
+            Genre.id == id, Genre.id > 0
+        ).first()
         if genre:
             db_sess.delete(genre)
             db_sess.commit()
@@ -69,6 +133,17 @@ class DataKeeper:
     #############################
     # ###-----ДЛЯ АРТИСТОВ----###
     #############################
+    def get_artist(self, id):
+        db_sess = db_session.create_session()
+        artist = db_sess.query(Artist).filter(
+            Artist.id == id, Artist.id > 0
+        ).first()
+        if artist:
+            return {'artist': artist.to_dict(
+                only=(
+                    'id', 'name'
+                ))}
+        return False
 
     def add_artist(self, name):
         db_sess = db_session.create_session()
@@ -86,7 +161,9 @@ class DataKeeper:
 
     def edit_artist(self, id, name):
         db_sess = db_session.create_session()
-        artist = db_sess.query(Artist).filter(Artist.id == id).first()
+        artist = db_sess.query(Artist).filter(
+            Artist.id == id, Artist.id > 0
+        ).first()
         if artist:
             artist.name = name
             db_sess.commit()
@@ -95,12 +172,22 @@ class DataKeeper:
 
     def delete_artist(self, id):
         db_sess = db_session.create_session()
-        artist = db_sess.query(Artist).filter(Artist.id == id).first()
+        artist = db_sess.query(Artist).filter(
+            Artist.id == id, Artist.id > 0
+        ).first()
         if artist:
             db_sess.delete(artist)
             db_sess.commit()
             return True
         return False
+
+    def get_artists(self):
+        db_sess = db_session.create_session()
+        artists = db_sess.query(Artist).filter(Artist.id > 0).all()
+        return [{'artist': i.to_dict(
+                only=(
+                    'id', 'name'
+                ))} for i in artists]
 
     #############################
     # ###-----ДЛЯ АЛЬБОМОВ----###
@@ -108,7 +195,7 @@ class DataKeeper:
 
     def get_artists_choices(self):
         db_sess = db_session.create_session()
-        artist = db_sess.query(Artist).all()
+        artist = db_sess.query(Artist).filter(Artist.id > 0).all()
         choices = []
         for i in artist:
             choices.append((i.id, i.name))
@@ -131,7 +218,9 @@ class DataKeeper:
 
     def edit_album(self, id, title, artistid):
         db_sess = db_session.create_session()
-        album = db_sess.query(Album).filter(Album.id == id).first()
+        album = db_sess.query(Album).filter(
+            Album.id == id, Album.id > 0
+        ).first()
         if album:
             album.title = title
             album.artistid = artistid
@@ -141,20 +230,62 @@ class DataKeeper:
 
     def delete_album(self, id):
         db_sess = db_session.create_session()
-        album = db_sess.query(Album).filter(Album.id == id).first()
+        album = db_sess.query(Album).filter(
+            Album.id == id, Album.id > 0
+        ).first()
         if album:
             db_sess.delete(album)
             db_sess.commit()
             return True
         return False
 
+    def get_album(self, id):
+        db_sess = db_session.create_session()
+        album = db_sess.query(Album).filter(
+            Album.id == id, Album.id > 0
+        ).first()
+        if album:
+            return {'album': album.to_dict(
+                only=(
+                    'id', 'title', 'artistid'
+                ))}
+        return False
+
+    def get_albums(self):
+        db_sess = db_session.create_session()
+        album = db_sess.query(Album).filter(Album.id > 0).all()
+        return [{'album': i.to_dict(
+            only=(
+                'id', 'title', 'artistid'
+            ))} for i in album]
+
     ######################
     # ###----ТРЕКИ-----###
     ######################
 
+    def get_tracks(self):
+        db_sess = db_session.create_session()
+        track = db_sess.query(Track).all()
+        if track:
+            return [{'track': i.to_dict(
+                only=(
+                    'id', 'name', 'genreid', 'albumid', 'seconds'
+                ))} for i in track]
+        return False
+
+    def get_track(self, id):
+        db_sess = db_session.create_session()
+        track = db_sess.query(Track).filter(Track.id == id).first()
+        if track:
+            return {'track': track.to_dict(
+                only=(
+                    'id', 'name', 'genreid', 'albumid', 'seconds'
+                ))}
+        return False
+
     def get_albums_choices(self):
         db_sess = db_session.create_session()
-        albums = db_sess.query(Album).all()
+        albums = db_sess.query(Album).filter(Album.id > 0).all()
         choices = []
         for i in albums:
             choices.append((i.id, i.title))
@@ -162,7 +293,7 @@ class DataKeeper:
 
     def get_genres_choices(self):
         db_sess = db_session.create_session()
-        genre = db_sess.query(Genre).all()
+        genre = db_sess.query(Genre).filter(Genre.id > 0).all()
         choices = []
         for i in genre:
             choices.append((i.id, i.name))
@@ -208,7 +339,9 @@ class DataKeeper:
 
     def get_pretty_album_info(self, id):
         db_sess = db_session.create_session()
-        album = db_sess.query(Album).filter(Album.id == id).first()
+        album = db_sess.query(Album).filter(
+            Album.id == id, Album.id > 0
+        ).first()
         if album:
             tracks = db_sess.query(Track).filter(Track.albumid == id).all()
             artist = db_sess.query(Artist).filter(

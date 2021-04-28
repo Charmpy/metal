@@ -9,5 +9,8 @@ class Album(SqlAlchemyBase, SerializerMixin):
                            primary_key=True, autoincrement=True)
     title = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     artistid = sqlalchemy.Column(sqlalchemy.Integer,
-                              sqlalchemy.ForeignKey("artists.id"))
+                                 sqlalchemy.ForeignKey(
+                                  "artists.id", ondelete='SET DEFAULT'),
+                                 default=0
+                                 )
     raiting = sqlalchemy.Column(sqlalchemy.Integer)
