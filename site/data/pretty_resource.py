@@ -20,7 +20,7 @@ class PrettyResource(Resource):
             return jsonify(out)
 
         elif param == 'tracks':
-            out = self.get_pretty_tracks_list()
-            return out
+            out = self.data.get_pretty_tracks_list()
+            return jsonify(out)
         return {'message': 'Bad param'}
 
