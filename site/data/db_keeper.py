@@ -124,7 +124,16 @@ class DataKeeper:
         genre = db_sess.query(Genre).filter(
             Genre.id == id, Genre.id > 0
         ).first()
+
         if genre:
+            tracks = db_sess.query(Track).filter(Track.genreid == id,
+                                                 Genre.id > 0
+                                                 ).all()
+            if bool(tracks):
+                for i in tracks:
+                    track = db_sess.query(Track).filter(
+                        Track.id == i.id).first()
+                    track.genreid = 0
             db_sess.delete(genre)
             db_sess.commit()
             return True
@@ -176,6 +185,13 @@ class DataKeeper:
             Artist.id == id, Artist.id > 0
         ).first()
         if artist:
+            albums = db_sess.query(Album).filter(
+                Album.artistid == id, Artist.id > 0).all()
+            if bool(albums):
+                for i in albums:
+                    album = db_sess.query(Album).filter(
+                        Album.id == i.id).first()
+                    album.artistid = 0
             db_sess.delete(artist)
             db_sess.commit()
             return True
@@ -234,6 +250,13 @@ class DataKeeper:
             Album.id == id, Album.id > 0
         ).first()
         if album:
+            tracks = db_sess.query(Track).filter(
+                Track.albumid == id, Album.id > 0).all()
+            if bool(tracks):
+                for i in tracks:
+                    track = db_sess.query(Track).filter(
+                        Track.id == i.id).first()
+                    track.albumid = 0
             db_sess.delete(album)
             db_sess.commit()
             return True
